@@ -1,10 +1,13 @@
 """Configuracao por variaveis de ambiente (12-factor, RNF-052, RNF-BE-31/32).
 
-Em desenvolvimento (``APP_ENV=dev``) o ``.env`` da raiz do repositorio e lido; nos
-demais ambientes as variaveis vem do ambiente do processo.
+``APP_ENV`` (dev | test | prod) e OBRIGATORIO: sem ele a aplicacao nao inicia (fail fast,
+RNF-BE-32), em vez de assumir ``dev`` e ligar seed, Swagger e cookie sem ``Secure`` por engano.
+
+O ``.env`` da raiz do repositorio so existe em maquinas de desenvolvimento (e nao entra
+na imagem Docker, ver ``.dockerignore``): se existir, e lido; as variaveis do ambiente do
+processo sempre prevalecem sobre ele.
 """
 
-import os
 from functools import lru_cache
 from pathlib import Path
 from typing import Annotated, Literal
@@ -14,7 +17,6 @@ from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 from sqlalchemy.engine import URL, make_url
 
 _ROOT_ENV_FILE = Path(__file__).resolve().parents[4] / ".env"
-_ENV_FILE = _ROOT_ENV_FILE if os.getenv("APP_ENV", "dev") == "dev" else None
 
 JWT_SECRET_MIN_BYTES = 32
 PASSWORD_MIN = 8
@@ -23,10 +25,10 @@ PASSWORD_MAX = 72
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
-        env_file=_ENV_FILE, extra="ignore", case_sensitive=False, hide_input_in_errors=True
+        env_file=_ROOT_ENV_FILE, extra="ignore", case_sensitive=False, hide_input_in_errors=True
     )
 
-    app_env: Literal["dev", "test", "prod"] = "dev"
+    app_env: Literal["dev", "test", "prod"]
     port: int = 8080
 
     db_url: str

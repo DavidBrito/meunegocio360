@@ -115,7 +115,7 @@ meunegocio360-core/
     └── shared/                 # transversais: erros, segurança, configuração, auditoria
 ```
 
-A configuração vem de variáveis de ambiente (`pydantic-settings`); em `dev` o `.env` da raiz é lido. O ambiente é definido por `APP_ENV` (`dev`, `test` ou `prod`).
+A configuração vem de variáveis de ambiente (`pydantic-settings`); o `.env` da raiz, quando existe (só em desenvolvimento), é lido, e as variáveis do ambiente do processo prevalecem sobre ele. `APP_ENV` (`dev`, `test` ou `prod`) é **obrigatória**: sem ela o backend não inicia (fail fast, RNF-BE-32), para que um deploy esquecido nunca suba como `dev`.
 
 ### Frontend
 
@@ -356,7 +356,7 @@ No painel do Render, crie um **Web Service** com *Language* `Docker`, *Root Dire
 
 | Variável | Valor em produção |
 | --- | --- |
-| `APP_ENV` | `prod` (desliga `/docs` e o *seed*) |
+| `APP_ENV` | `prod` (**obrigatória**; desliga `/docs` e o *seed*) |
 | `CORS_ALLOWED_ORIGINS` | URL do site no Netlify (ex.: `https://meunegocio360.netlify.app`) |
 | `APP_AUTH_COOKIE_SECURE` | `true` |
 | `DB_URL`, `DB_USER`, `DB_PASSWORD` | Dados do banco de produção (ver abaixo). `DB_URL` no formato `postgresql+psycopg://<host>:<porta>/<banco>` (o Render informa a URL como `postgresql://…`; ajuste o prefixo). |
@@ -412,4 +412,5 @@ Em *Environment variables*, defina `VITE_API_BASE_URL=/api/v1`.
 | [`docs/requisitos/frontend/RNF-FE.md`](./docs/requisitos/frontend/RNF-FE.md) | Requisitos não funcionais do frontend (arquitetura, estilos e identidade visual, camada HTTP, formulários e segurança). |
 | [`docs/requisitos/frontend/`](./docs/requisitos/frontend) | Um arquivo por requisito funcional do frontend: `RF-FE-001.md` a `RF-FE-005.md`, correspondentes aos do backend. |
 | [`docs/adr/`](./docs/adr) | Decisões de arquitetura deste fork: [0001](./docs/adr/0001-backend-python-fastapi.md) Python/FastAPI e equivalências com Spring, [0002](./docs/adr/0002-banco-postgresql.md) PostgreSQL, [0003](./docs/adr/0003-sqlalchemy-sincrono-e-alembic.md) SQLAlchemy síncrono e Alembic, [0004](./docs/adr/0004-apscheduler-no-app.md) APScheduler, [0005](./docs/adr/0005-swagger-em-docs.md) Swagger em `/docs`. |
+| [`docs/historico-de-desenvolvimento.md`](./docs/historico-de-desenvolvimento.md) | Histórico do desenvolvimento assistido por IA: prompts usados, decisões (e quem as tomou) e pontos a repensar. |
 | [`AGENTS.md`](./AGENTS.md) | Instruções para assistentes de IA que trabalham no repositório. |
