@@ -184,6 +184,15 @@ A descrição de cada variável está comentada em [`.env.example`](./.env.examp
 
 Scripts de teste serão acrescentados na fase de testes (ver [Contribuições](#6-contribuições)).
 
+### Verificação manual da autenticação na Swagger UI (RF-BE-001)
+
+1. Com banco e backend no ar (`APP_ENV=dev`, o *seed* cria `admin@meunegocio360.com.br` e `usuario@meunegocio360.com.br` com as senhas `SEED_*` do `.env`), abra `http://localhost:8080/docs`.
+2. Em `POST /api/v1/auth/login`, use *Try it out* com o e-mail e a senha de seed. O navegador guarda o cookie `mn360_refresh` (HttpOnly, restrito a `/api/v1/auth`); o `accessToken` aparece no corpo.
+3. Clique em **Authorize** (cadeado), cole o `accessToken` (sem o prefixo `Bearer`) e chame `GET /api/v1/auth/me`.
+4. `POST /api/v1/auth/refresh` e `POST /api/v1/auth/logout` não têm corpo e usam o cookie; a Swagger envia `Origin: http://localhost:8080`, que já consta em `CORS_ALLOWED_ORIGINS` no `.env.example`. Como o cookie é `SameSite=Strict`, teste sempre pela própria Swagger do backend (mesma origem).
+
+Os cenários de erro (senha errada, bloqueio, reuso de refresh token, origem não permitida) estão no roteiro do Postman abaixo e nos critérios de aceite do RF.
+
 ### Verificação manual da autenticação no Postman (RF-BE-001)
 
 1. Copie `.env.example` para `.env` e preencha `DB_PASSWORD`, `JWT_SECRET` (ao menos 32 bytes) e as senhas `SEED_*` (8 a 72 caracteres). Para testar por HTTP local, configure `APP_AUTH_COOKIE_SECURE=false`; essa opção só é permitida no perfil `dev`.
