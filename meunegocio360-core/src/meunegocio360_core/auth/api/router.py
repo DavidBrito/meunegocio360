@@ -9,7 +9,6 @@ from meunegocio360_core.auth.api.cookies import (
     set_refresh_cookie,
 )
 from meunegocio360_core.auth.api.dependencies import (
-    bearer_scheme,
     get_access_claims,
     get_current_user_use_case,
     get_login_use_case,
@@ -30,7 +29,7 @@ from meunegocio360_core.auth.domain.errors import (
 )
 from meunegocio360_core.shared.config import Settings, get_settings
 from meunegocio360_core.shared.errors import AppError
-from meunegocio360_core.shared.openapi import problem_responses
+from meunegocio360_core.shared.openapi import bearer_scheme, problem_responses
 from meunegocio360_core.shared.security import AccessClaims
 
 router = APIRouter(prefix="/api/v1/auth", tags=["Autenticação"])

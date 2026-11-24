@@ -2,7 +2,12 @@
 
 from typing import Any
 
+from fastapi.security import HTTPBearer
 from pydantic import BaseModel
+
+# Documenta o esquema Bearer no OpenAPI (botao "Authorize" da Swagger UI). A validacao real
+# do token e do AuthGateMiddleware.
+bearer_scheme = HTTPBearer(auto_error=False, description="Token de acesso (JWT) do login.")
 
 
 class FieldError(BaseModel):
