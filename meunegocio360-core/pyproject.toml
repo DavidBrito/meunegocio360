@@ -1,0 +1,36 @@
+[project]
+name = "meunegocio360-core"
+version = "0.1.0"
+description = "MeuNegocio360 - microsservico Nucleo (FastAPI)"
+requires-python = ">=3.12"
+dependencies = [
+    "alembic>=1.20.1",
+    "apscheduler>=3,<4",
+    "bcrypt>=5.0.0",
+    "fastapi>=0.165.0",
+    "psycopg[binary]>=3.3.9",
+    "pydantic-settings>=2.16.3",
+    "pyjwt>=2.15.1",
+    "sqlalchemy>=2,<3",
+    "uvicorn>=0.54.0",
+]
+
+[build-system]
+requires = ["uv_build>=0.13.10,<0.14.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "ruff>=0.17.6",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+src = ["src"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "N"]
+
+[tool.ruff.lint.flake8-bugbear]
+extend-immutable-calls = ["fastapi.Depends", "fastapi.Security", "fastapi.Cookie"]
