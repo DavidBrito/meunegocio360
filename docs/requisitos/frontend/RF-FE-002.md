@@ -85,6 +85,16 @@ CNPJ e telefone são enviados **somente com dígitos** (RNF-FE-28). O campo `ver
 
 O nome fantasia (ou a razão social, se não houver) aparece na barra de navegação para todos os usuários, ao lado do nome do usuário e do botão **Sair**.
 
+## Adendo do fork: layout da navegação e reativação
+
+> **Decisões do autor deste fork (não constam no requisito original).** Registradas em [`historico-de-desenvolvimento.md`](../../historico-de-desenvolvimento.md) (D-080 a D-095).
+
+- **Barra de navegação (`AppLayout`):** fundo Laranja com texto, links e ícones em **Preto** (RNF-FE, seção 2.2). Telas grandes (≥ `lg`): `[logo] [Início] [Empresa] … [empresa] [usuário / perfil] [Sair]`, com a logo (`assets/logo_meunegocio360_v1_branca.png`) **à esquerda dos itens**. Mobile (< `lg`): `[☰] [logo centralizado] [🔍]`, com o menu abrindo abaixo (empilhado, fecha ao navegar). Os dois botões de ícone têm o mesmo tamanho (≥ 44×44 px) para a logo ficar centrada.
+- **Ícone de pesquisar:** *placeholder* **desabilitado** (`aria-label` "Pesquisar (em breve)"), apenas no mobile; não existe busca global em nenhum RF.
+- **Reativação:** como `GET /empresa` só devolve a empresa **ativa**, o `ADMIN` reativa pela lista **"Empresas inativas"** da tela `/empresa/cadastro`, alimentada pelo endpoint do adendo ao [RF-BE-002](../backend/RF-BE-002.md) (`GET /empresa/inativas`). Isso funciona também depois de recarregar a página.
+- **Provider:** `EmpresaProvider` não renderiza nenhuma tela protegida enquanto a empresa carrega e, em falha de rede, mostra a tela de erro com **Tentar novamente** e **Sair** para todas as rotas (inclusive `/empresa`).
+- **Saída voluntária:** ao clicar em **Sair**, a rota de origem **não** é preservada (o próximo usuário não herda a página do anterior); visitante sem sessão e sessão expirada continuam preservando.
+
 ## Critérios de aceite
 
 ```gherkin

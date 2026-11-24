@@ -262,6 +262,14 @@ Corpo de exemplo para cadastro:
 
 Para validar a exigência de empresa ativa em ambiente de desenvolvimento, inative temporariamente a empresa pelo endpoint de RF-BE-002 e tente cadastrar cliente: a resposta esperada é `422 COMPANY_NOT_ACTIVE`. Reative a empresa antes de continuar os fluxos acima. A exclusão com histórico será exercitada quando existirem vínculos de vendas ou OS; até lá, a interface de verificação de vínculos permite integração sem acoplar features.
 
+### Verificação manual da empresa e do menu no navegador (RF-FE-002)
+
+Pré-requisitos: banco, backend (`APP_ENV=dev`) e `npm run dev` no ar, `http://localhost:5173`, usuários do *seed* (`admin@`, `usuario@` = operador comercial, `financeiro@` = operador financeiro; senhas `SEED_*` do `.env`). Para recomeçar sem empresa: `docker exec meunegocio360-db-core psql -U meunegocio360 -d meunegocio360_core -c "delete from empresa"`.
+
+1. **Primeiro cadastro e guardas (ADMIN, sem empresa):** ao entrar você cai em `/empresa/cadastro` ("Cadastre sua empresa") e `/` ou `/empresa` por URL voltam para lá. No CNPJ, digitar `11222333000181` vira `11.222.333/0001-81` e colar texto com letras mantém só os dígitos. `11.222.333/0001-80` → "CNPJ inválido." sem requisição (aba Network). Cadastro válido → "Empresa cadastrada com sucesso.", você vai ao início e a barra mostra o nome da empresa (o `POST` leva o CNPJ só com dígitos).
+2. **Perfis e menu (operadores):** sem empresa, `usuario@` vê "Aguardando o cadastro da empresa"; com a empresa cadastrada, o menu mostra **Início** e **Empresa**, `/empresa` é somente leitura (sem Editar/Inativar/Reativar) e `/empresa/cadastro` mostra "Acesso negado". Repita com `financeiro@`. Navegue só pelo teclado (Tab/Enter; o primeiro Tab leva ao link "Ir para o conteúdo").
+3. **Barra responsiva, edição e inativação (ADMIN):** no desktop, a logo fica à esquerda de Início/Empresa, com o item atual sublinhado, e à direita o nome da empresa, usuário/perfil e **Sair**. Em 360 px (DevTools → Ctrl+Shift+M): `☰ | logo centralizada | 🔍 desabilitado`, o menu abre abaixo e fecha ao navegar. Em `/empresa`, **Editar** → mude o nome fantasia → "Dados da empresa atualizados." e o novo nome na barra; para o conflito de versão, altere a empresa pela Swagger (`PUT`) e salve na tela: aparece **Recarregar dados** sem perder o que foi digitado. **Inativar** abre o modal (Cancelar não muda nada e devolve o foco ao botão); confirmar leva ao cadastro, onde a lista **Empresas inativas** permite **Reativar**, inclusive após recarregar a página.
+
 ### Conceitos de DevOps (introdutórios)
 
 O foco do projeto é o desenvolvimento de software. Os conceitos de DevOps usados aqui são apenas introdutórios e já vêm prontos:
