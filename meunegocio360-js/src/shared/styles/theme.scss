@@ -1,0 +1,68 @@
+// Tema único do Bootstrap com a identidade da marca (RNF-FE-08, RNF-FE-07 e seção 2 do RNF-FE.md).
+// Cores, fontes e tamanhos ficam AQUI; componentes usam só classes do Bootstrap.
+
+@import 'bootstrap/scss/functions';
+
+// --- 2.1 Paleta ---------------------------------------------------------------------------
+$laranja: #ec4e26;
+$creme: #fcf5f0;
+$cinza: #4a3f39;
+$preto: #1f1612;
+$laranja-amarronzado-claro: #cdbbae;
+
+$primary: $laranja;
+$body-bg: $creme;
+$body-color: $preto;
+$body-secondary-color: $cinza;
+$border-color: $cinza;
+$card-bg: $creme;
+$card-border-color: $cinza;
+$table-border-color: $cinza;
+
+// Texto escuro sobre o laranja (Preto 4,8:1; Branco só 3,7:1). Com $min-contrast-ratio = 4,5
+// (padrão), o Bootstrap escolhe o Preto no `.btn-primary` automaticamente (seção 2.2).
+$color-contrast-dark: $preto;
+
+// --- Feedback e foco (2.2): contraste AA contra o Creme -------------------------------------
+$danger: #b02a37;
+$success: #146c43;
+$focus-ring-width: 0.25rem;
+$focus-ring-opacity: 1;
+$focus-ring-color: $preto; // anel ≥ 3:1 contra o Creme (RNF-FE-23)
+
+// Links: Preto e sempre sublinhados (Laranja sobre Creme não atende AA em texto normal)
+$link-color: $preto;
+$link-hover-color: $cinza;
+$link-decoration: underline;
+
+// --- 2.3 Tipografia -------------------------------------------------------------------------
+$font-family-sans-serif:
+  'Barlow',
+  system-ui,
+  -apple-system,
+  'Segoe UI',
+  Roboto,
+  sans-serif;
+$headings-font-family: 'Barlow Condensed', 'Barlow', system-ui, sans-serif;
+$headings-font-weight: 600;
+$font-weight-base: 400;
+$font-size-base: 1rem;
+
+// Alvos interativos com pelo menos 44 px de altura (RNF-FE-23)
+$input-btn-padding-y: 0.625rem;
+
+// Sem tema escuro nesta fase (extensão opcional 3 do RF-FE-001)
+$enable-dark-mode: false;
+
+@import 'bootstrap/scss/variables';
+@import 'bootstrap/scss/variables-dark';
+
+// Rodapé: cor adicionada ao mapa de cores (gera `bg-footer`)
+$theme-colors: map-merge(
+  $theme-colors,
+  (
+    'footer': $laranja-amarronzado-claro,
+  )
+);
+
+@import 'bootstrap/scss/bootstrap';

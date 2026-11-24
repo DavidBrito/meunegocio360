@@ -143,7 +143,7 @@ As regras que justificam essa organização estão em [RNF-010, RNF-011](./docs/
 
 ### Pré-requisitos
 
-Python 3.12 ou superior, [`uv`](https://docs.astral.sh/uv/), Node.js (versão LTS) com npm, Docker com Docker Compose, Git e Visual Studio Code.
+Python 3.12 ou superior, [`uv`](https://docs.astral.sh/uv/), Node.js 22 LTS (22.22 ou superior, exigido por Vite 8, ESLint 10 e React Router 8) com npm, Docker com Docker Compose, Git e Visual Studio Code.
 
 ### Passo a passo
 
