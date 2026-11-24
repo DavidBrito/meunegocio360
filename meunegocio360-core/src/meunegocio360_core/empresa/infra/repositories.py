@@ -3,7 +3,7 @@
 from typing import Self
 from uuid import UUID
 
-from sqlalchemy import exists, select
+from sqlalchemy import exists, func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.orm.exc import StaleDataError
@@ -20,6 +20,13 @@ from meunegocio360_core.empresa.infra.models import EmpresaModel
 _CONSTRAINTS = {
     "uk_empresa_cnpj": CompanyCnpjDuplicateError,
     "uk_empresa_ativa_unica": CompanyAlreadyActiveError,
+}
+
+
+# Campos de ordenacao permitidos (nome do contrato -> coluna).
+_ORDENACAO = {
+    "atualizadoEm": EmpresaModel.atualizado_em,
+    "razaoSocial": EmpresaModel.razao_social,
 }
 
 
@@ -73,6 +80,27 @@ class SqlAlchemyEmpresaRepository:
         if excluding is not None:
             condition = condition & (EmpresaModel.id != excluding)
         return bool(self._session.scalar(select(exists().where(condition))))
+
+    def list_inactive(
+        self, *, offset: int, limit: int, sort_field: str, descending: bool
+    ) -> list[Empresa]:
+        coluna = _ORDENACAO[sort_field]
+        ordem = coluna.desc() if descending else coluna.asc()
+        # `id` desempata: a paginacao fica estavel mesmo com valores repetidos.
+        statement = (
+            select(EmpresaModel)
+            .where(EmpresaModel.ativa.is_(False))
+            .order_by(ordem, EmpresaModel.id)
+            .offset(offset)
+            .limit(limit)
+        )
+        return [_to_domain(model) for model in self._session.scalars(statement)]
+
+    def count_inactive(self) -> int:
+        statement = (
+            select(func.count()).select_from(EmpresaModel).where(EmpresaModel.ativa.is_(False))
+        )
+        return int(self._session.scalar(statement) or 0)
 
     def add(self, empresa: Empresa) -> None:
         self._session.add(

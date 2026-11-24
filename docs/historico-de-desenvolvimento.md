@@ -19,7 +19,9 @@ Legenda de autoria: **[Usuário]** decisão do autor humano · **[IA]** proposta
 | 24/11/2026 | 1. RF-BE-001 — autenticação (backend) | Login, refresh rotativo, logout, `/me`, deny-by-default | PR #1 (mergeado) |
 | 24/11/2026 | 2. Endurecimento de config (pós-revisão do RF-BE-001) | `APP_ENV` obrigatório; `hide_parameters` | branch `chore/endurecimento-config-e-historico` |
 | 24/11/2026 | 3. RF-FE-001 — login (frontend) | Tela de login, sessão em memória, renovação single-flight | PR #2 (mergeado) |
-| 24/11/2026 | 4. RF-BE-002 — empresa e perfis (backend) | Implementado e verificado manualmente (seção 3.6); PR ainda não aberto | branch `feat/rf-be-002-empresa` (empilhada na `chore/…`) |
+| 24/11/2026 | 4. RF-BE-002 — empresa e perfis (backend) | Implementado, verificado e mergeado | PR #3 (chore) e PR #4 (RF-BE-002), mergeados |
+| 24/11/2026 | 5. Adendo ao RF-BE-002: `GET /empresa/inativas` | Endpoint de empresas inativas (reativação), paginação compartilhada | branch `feat/rf-be-002-empresas-inativas` |
+| 24/11/2026 | 6. RF-FE-002 — empresa, layout e guardas (frontend) | Em andamento (seção 3.7) | branch `feat/rf-fe-002-empresa` |
 
 ---
 
@@ -75,6 +77,11 @@ Os prompts abaixo são reproduzidos como foram escritos. As menções `@arquivo`
 
 ### P9 — Aprovação do plano e pedido de registro
 > Adiciona APP_ENV e hide_parameters. Cria um arquivo chamado, histórico de desenvolvimento. Essas decisões suas e minhas precisam ficar registradas. Já que é uma disciplina de IA, eu quero posteriormente pensar com calma em cada ponto desse pois podem impactar no futuro. O prompt usado é interessante também. Segue o plano. Aceito suas decisões.
+
+### P10 — Implementar o RF-FE-002 (modo `/plan`)
+> Implemente o requisito RF-FE-002, considerando as especificações gerais do projeto e específicas dessa funcionalidade. No menu de navegação, use a imagem para a brand assets\logo_meunegocio360_v1_branca.png localizado à esquerda dos itens do menu, no caso de telas grandes; em telas de dispositivos móveis, incluir ao centro entre o ícone de hambúrguer e o ícone de pesquisar, respeitando a paleta de cores do sistema, definida em RNF-FE.md. Explique as modificações aplicadas com referências à documentação de requisitos e liste 3 testes manuais a serem realizados no navegador que atendam os critérios de aceitação especificados. Dê atenção a usabilidade e disposição dos itens no menu.
+
+*(Respostas do autor às perguntas do plano: ícone de pesquisar = placeholder desabilitado; reativação = acrescentar endpoint no backend; PRs #3 e #4 mergeados na `main`, usar a `main` como base.)*
 
 ### Padrão observado nos prompts (para reaproveitar)
 1. **Contexto fixo por `@`:** `GERAIS.md` + `RNF-BE.md` (ou `RNF-FE.md`) em todo pedido de requisito; o RF é citado pelo ID.
@@ -172,6 +179,15 @@ Cada decisão tem **autor**, **alternativas** e **ponto para repensar** (impacto
 | D-071 | `CamelModel`, `bearer_scheme`, `Perfil`, `require_perfis` e os validadores foram movidos para `shared` (refactors mínimos em `auth`). | IA | Duplicar em cada feature. | `shared` cresce; deve conter só o que é técnico/transversal (RNF-093). | Médio |
 | D-072 | Conexão com o banco em **UTC** (`-c timezone=UTC`) e respostas convertidas para UTC. | IA (RNF-033) | Confiar no fuso do servidor. | — | Fácil |
 | D-073 | O `downgrade` da migration `0003` é **com perda** (os dois perfis de operador voltam a `USUARIO`). | IA | Não oferecer downgrade. | Verificado num roundtrip no banco de dev (e restaurado à mão). | Fácil |
+
+### 3.7 Adendo ao RF-BE-002 e RF-FE-002 — empresas inativas, layout e guardas
+
+| ID | Decisão | Autor | Alternativas / contexto | Ponto para repensar | Reversível? |
+| --- | --- | --- | --- | --- | --- |
+| D-080 | **Ícone de pesquisar = placeholder desabilitado**, só no mobile (nenhum RF define busca global). | Usuário (entre 3 opções propostas pela IA) | Campo de busca sem função; placeholder também no desktop. | Reserva o lugar no layout; vira função quando existir busca global. | Fácil |
+| D-081 | **Novo endpoint `GET /empresa/inativas`** (ADMIN, paginado) para permitir a reativação após recarregar. É um **adendo ao RF-BE-002** (contrato que o requisito original não tem). | Usuário (a IA apontou a lacuna e ofereceu "reativar só na mesma sessão" como alternativa) | Guardar `id`/`versao` em memória (perde-se ao recarregar). | O fork passa a divergir do contrato original; documentado como adendo em `RF-BE-002.md`. | Médio |
+| D-082 | A listagem usa uma **paginação compartilhada** (`shared/pagination.py`: `page`, `size` ≤ 100, `sort` com lista permitida, `Page`), já pensada para RF-BE-003/004/005. | IA | Paginação só nesta rota. | O padrão do RNF-BE-13/16 fica definido uma vez; `AppError` ganhou `errors[]`. | Médio |
+| D-083 | A Parte A (backend) vai em **PR próprio, antes** do PR do frontend; a branch do FE sai dela (empilhada). | IA, aceito (plano aprovado) | Incluir o endpoint no PR do FE (mistura RF). | Ordem de merge: backend primeiro. | Fácil |
 
 ---
 
