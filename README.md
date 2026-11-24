@@ -412,4 +412,5 @@ Em *Environment variables*, defina `VITE_API_BASE_URL=/api/v1`.
 | [`docs/requisitos/frontend/RNF-FE.md`](./docs/requisitos/frontend/RNF-FE.md) | Requisitos não funcionais do frontend (arquitetura, estilos e identidade visual, camada HTTP, formulários e segurança). |
 | [`docs/requisitos/frontend/`](./docs/requisitos/frontend) | Um arquivo por requisito funcional do frontend: `RF-FE-001.md` a `RF-FE-005.md`, correspondentes aos do backend. |
 | [`docs/adr/`](./docs/adr) | Decisões de arquitetura deste fork: [0001](./docs/adr/0001-backend-python-fastapi.md) Python/FastAPI e equivalências com Spring, [0002](./docs/adr/0002-banco-postgresql.md) PostgreSQL, [0003](./docs/adr/0003-sqlalchemy-sincrono-e-alembic.md) SQLAlchemy síncrono e Alembic, [0004](./docs/adr/0004-apscheduler-no-app.md) APScheduler, [0005](./docs/adr/0005-swagger-em-docs.md) Swagger em `/docs`. |
+| [`docs/historico-de-desenvolvimento.md`](./docs/historico-de-desenvolvimento.md) | Histórico do desenvolvimento assistido por IA: prompts usados, decisões (e quem as tomou) e pontos a repensar. |
 | [`AGENTS.md`](./AGENTS.md) | Instruções para assistentes de IA que trabalham no repositório. |
