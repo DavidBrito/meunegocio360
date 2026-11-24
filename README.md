@@ -115,7 +115,7 @@ meunegocio360-core/
     └── shared/                 # transversais: erros, segurança, configuração, auditoria
 ```
 
-A configuração vem de variáveis de ambiente (`pydantic-settings`); em `dev` o `.env` da raiz é lido. O ambiente é definido por `APP_ENV` (`dev`, `test` ou `prod`).
+A configuração vem de variáveis de ambiente (`pydantic-settings`); o `.env` da raiz, quando existe (só em desenvolvimento), é lido, e as variáveis do ambiente do processo prevalecem sobre ele. `APP_ENV` (`dev`, `test` ou `prod`) é **obrigatória**: sem ela o backend não inicia (fail fast, RNF-BE-32), para que um deploy esquecido nunca suba como `dev`.
 
 ### Frontend
 
@@ -356,7 +356,7 @@ No painel do Render, crie um **Web Service** com *Language* `Docker`, *Root Dire
 
 | Variável | Valor em produção |
 | --- | --- |
-| `APP_ENV` | `prod` (desliga `/docs` e o *seed*) |
+| `APP_ENV` | `prod` (**obrigatória**; desliga `/docs` e o *seed*) |
 | `CORS_ALLOWED_ORIGINS` | URL do site no Netlify (ex.: `https://meunegocio360.netlify.app`) |
 | `APP_AUTH_COOKIE_SECURE` | `true` |
 | `DB_URL`, `DB_USER`, `DB_PASSWORD` | Dados do banco de produção (ver abaixo). `DB_URL` no formato `postgresql+psycopg://<host>:<porta>/<banco>` (o Render informa a URL como `postgresql://…`; ajuste o prefixo). |

@@ -18,7 +18,9 @@ class Base(DeclarativeBase):
 
 @lru_cache
 def get_engine() -> Engine:
-    return create_engine(get_settings().database_url, pool_pre_ping=True)
+    # hide_parameters: erros de banco nao incluem os valores dos parametros SQL (e-mail,
+    # hashes, tokens), que iriam parar nos logs (RNF-023, RNF-025).
+    return create_engine(get_settings().database_url, pool_pre_ping=True, hide_parameters=True)
 
 
 @lru_cache
