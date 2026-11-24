@@ -19,7 +19,7 @@ Legenda de autoria: **[Usuário]** decisão do autor humano · **[IA]** proposta
 | 24/11/2026 | 1. RF-BE-001 — autenticação (backend) | Login, refresh rotativo, logout, `/me`, deny-by-default | PR #1 (mergeado) |
 | 24/11/2026 | 2. Endurecimento de config (pós-revisão do RF-BE-001) | `APP_ENV` obrigatório; `hide_parameters` | branch `chore/endurecimento-config-e-historico` |
 | 24/11/2026 | 3. RF-FE-001 — login (frontend) | Tela de login, sessão em memória, renovação single-flight | PR #2 (mergeado) |
-| 24/11/2026 | 4. RF-BE-002 — empresa e perfis (backend) | Em andamento (ver seção 5) | branch `feat/rf-be-002-empresa` |
+| 24/11/2026 | 4. RF-BE-002 — empresa e perfis (backend) | Implementado e verificado manualmente (seção 3.6); PR ainda não aberto | branch `feat/rf-be-002-empresa` (empilhada na `chore/…`) |
 
 ---
 
@@ -154,7 +154,7 @@ Cada decisão tem **autor**, **alternativas** e **ponto para repensar** (impacto
 | D-058 | Verificação ponta a ponta por **scripts descartáveis** (Chrome headless via DevTools Protocol), **fora do repositório**. | IA (regra 9: sem testes automatizados fora da fase) | Versionar os scripts. | Os resultados não são reproduzíveis por outras pessoas; na fase de testes viram Vitest/MSW/Playwright. | Fácil |
 | D-059 | `npm audit fix` alterou dependências **de desenvolvimento** do template. | IA | Deixar 3 avisos moderados. | O `package-lock.json` mudou além das dependências do RF. | Fácil |
 
-### 3.6 RF-BE-002 — Empresa e perfis (plano aprovado)
+### 3.6 RF-BE-002 — Empresa e perfis (plano aprovado e implementado)
 
 | ID | Decisão | Autor | Alternativas / contexto | Ponto para repensar | Reversível? |
 | --- | --- | --- | --- | --- | --- |
@@ -164,6 +164,14 @@ Cada decisão tem **autor**, **alternativas** e **ponto para repensar** (impacto
 | D-063 | A claim `perfil` é confiada por até 15 min: token emitido com `USUARIO` recebe `403` nas escritas até renovar. | IA, aceito | Reler o perfil no banco a cada requisição. | Custo de uma consulta por requisição vs. janela de inconsistência (relacionado a D-030). | Médio |
 | D-064 | `Perfil` passa a ficar em **`shared`** (importado por `auth` e `empresa`), com a dependência `require_perfis`. | IA | Duplicar o enum ou `empresa` importar de `auth`. | RNF-BE-05 (uma feature não acessa internals de outra). | Médio |
 | D-065 | `EmpresaAtiva` é a **única** interface de `empresa` para outras features. | RF | — | RF-BE-003/004/005 devem usar só ela. | Difícil |
+| D-066 | **CNPJ duplicado é verificado antes de "já existe ativa"** no cadastro. | IA (para atender ao cenário "CNPJ duplicado" do RF) | Inverter a ordem. | O RF não diz a precedência; o cenário de aceite só passa com esta. | Fácil |
+| D-067 | Corridas (dois cadastros simultâneos) são resolvidas **pelo banco** (índice único parcial e `uk_empresa_cnpj`); a infra **traduz o nome da restrição** violada em erro de negócio. | IA (pontos de atenção do RF) | Só `if` na aplicação (condição de corrida). | Depende de o nome da restrição vir no erro do driver (psycopg 3): verificado com 2 POSTs simultâneos. | Médio |
+| D-068 | `versao` **começa em 0** (contrato do RF) via `version_id_generator`; a comparação com a versão enviada é explícita (lock `FOR UPDATE`) e o ORM é a segunda barreira. | IA | Padrão do SQLAlchemy (começa em 1, como `usuario`). | `usuario` começa em 1 e `empresa` em 0: inconsistência entre tabelas (RNF-BE-22 não fixa o valor inicial). | Médio |
+| D-069 | **CNPJ só com 14 dígitos, sem máscara** (RNF-BE-27); com máscara → 400. | IA | Aceitar máscara e normalizar (o RF-BE-003 pede aceitar máscara em documentos). | Contrato diferente entre empresa e cliente. | Fácil |
+| D-070 | Campos opcionais em branco viram `null`; fuso validado por `ZoneInfo` (com filtro de chave); `moeda` só `BRL`. | IA | Validar contra `available_timezones()`. | A validação IANA depende do `tzdata` do sistema (confirmado na imagem Docker slim). | Fácil |
+| D-071 | `CamelModel`, `bearer_scheme`, `Perfil`, `require_perfis` e os validadores foram movidos para `shared` (refactors mínimos em `auth`). | IA | Duplicar em cada feature. | `shared` cresce; deve conter só o que é técnico/transversal (RNF-093). | Médio |
+| D-072 | Conexão com o banco em **UTC** (`-c timezone=UTC`) e respostas convertidas para UTC. | IA (RNF-033) | Confiar no fuso do servidor. | — | Fácil |
+| D-073 | O `downgrade` da migration `0003` é **com perda** (os dois perfis de operador voltam a `USUARIO`). | IA | Não oferecer downgrade. | Verificado num roundtrip no banco de dev (e restaurado à mão). | Fácil |
 
 ---
 
@@ -177,6 +185,7 @@ Cada decisão tem **autor**, **alternativas** e **ponto para repensar** (impacto
 | O `uv init` gravou o e-mail pessoal no `pyproject.toml`. | Quase-vazamento | Removido antes do commit (D-032). Lição: revisar o *diff* de arquivos gerados por ferramentas. |
 | Versões de bibliotecas posteriores ao conhecimento da IA. | Risco | Conferidas no `node_modules`/`uv` (D-052). |
 | Os scripts de verificação ponta a ponta não estão no repositório. | Limitação | D-058. |
+| Um servidor antigo ficou ocupando a porta 8080 e o novo falhou ao subir (o `seed` rodou, o bind falhou): a primeira verificação do RF-BE-002 bateu no código velho (500 no login do operador). | Falha de ambiente | Detectado pelo `500` e pelo log (`address already in use`); resolvido matando o processo pelo PID. Lição: conferir qual processo atende a porta antes de verificar. |
 | Um comando `pkill -f` derrubou o próprio shell da sessão (padrão contido na linha de comando). | Falha de ferramenta | Sem impacto no repositório; passou a matar por PID/porta. |
 | Divergência de fluxo: o README manda *squash* e `main` protegida; o autor optou por merge commit e branches mantidas. | Decisão consciente | D-010, D-011. |
 
@@ -193,3 +202,5 @@ Cada decisão tem **autor**, **alternativas** e **ponto para repensar** (impacto
 7. **Revisar linha a linha** o código gerado (RNF-013): `refresh.py`, `login.py`, `shared/security.py`, `shared/errors.py`, `sessionManager.js`, `client.js`.
 8. **Rever D-063/D-030**: reler o perfil no banco ou aceitar a janela de 15 min.
 9. **Ordem de merge:** PR `chore/endurecimento-config-e-historico` antes do PR do RF-BE-002.
+10. **Contrato do CNPJ:** decidir se empresa e cliente aceitam máscara (D-069) e se `versao` deve começar sempre em 0 (D-068).
+11. **Validar com o autor** os códigos novos (`COMPANY_NOT_FOUND`) antes de o RF-FE-002 depender deles (D-061).
