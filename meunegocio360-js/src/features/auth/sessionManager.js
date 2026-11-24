@@ -19,9 +19,9 @@ export function createSessionManager({ onChange, onCleared }) {
     clearTimeout(renovacaoTimer)
   }
 
-  function encerrar({ expirou }) {
+  function encerrar({ expirou, saiu = false }) {
     limpar()
-    onChange({ status: 'anonimo', usuario: null, expirou })
+    onChange({ status: 'anonimo', usuario: null, expirou, saiu })
     onCleared()
   }
 
@@ -85,7 +85,7 @@ export function createSessionManager({ onChange, onCleared }) {
       } catch {
         // o resultado do logout é ignorado em caso de falha (RF-FE-001, item 5)
       }
-      encerrar({ expirou: false })
+      encerrar({ expirou: false, saiu: true }) // saída voluntária: não preserva a rota de origem
     },
   }
 }
