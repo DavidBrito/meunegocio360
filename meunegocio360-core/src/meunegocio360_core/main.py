@@ -13,6 +13,7 @@ from meunegocio360_core.auth.api.dependencies import get_hasher, get_jwt_service
 from meunegocio360_core.auth.api.router import router as auth_router
 from meunegocio360_core.auth.application.cleanup import CleanupRefreshTokensUseCase
 from meunegocio360_core.auth.infra.seed import seed_dev_users
+from meunegocio360_core.empresa.api.router import router as empresa_router
 from meunegocio360_core.shared.clock import SystemClock
 from meunegocio360_core.shared.config import Settings, get_settings
 from meunegocio360_core.shared.errors import register_error_handlers
@@ -75,8 +76,21 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         title="MeuNegocio360 — Núcleo",
         version="0.1.0",
         description=(
-            "API do microsserviço Núcleo. Faça login em `/api/v1/auth/login` e use *Authorize*."
+            "API do microsserviço Núcleo. Faça login em `/api/v1/auth/login` e use *Authorize*.\n\n"
+            "**Empresa ativa (`EmpresaAtiva`):** os módulos de negócio (clientes, fornecedores, "
+            "catálogo e demais) nunca recebem `empresa_id` do cliente; o servidor resolve a "
+            "empresa ativa. Sem empresa ativa, a criação de registros responde "
+            "`422 COMPANY_NOT_ACTIVE`; a consulta aos dados existentes continua permitida."
         ),
+        openapi_tags=[
+            {
+                "name": "Empresa",
+                "description": (
+                    "Cadastro da empresa única ativa e seus parâmetros. Somente `ADMIN` escreve; "
+                    "qualquer perfil autenticado consulta."
+                ),
+            }
+        ],
         docs_url="/docs" if docs else None,
         redoc_url=None,
         openapi_url="/openapi.json" if docs else None,
@@ -86,6 +100,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     register_error_handlers(app)
     app.include_router(health_router)
     app.include_router(auth_router)
+    app.include_router(empresa_router)
 
     # Ordem: o ultimo adicionado e o mais externo.
     app.add_middleware(
