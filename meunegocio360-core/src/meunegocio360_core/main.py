@@ -57,6 +57,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                 SystemClock(),
                 admin_senha=settings.seed_admin_senha,
                 usuario_senha=settings.seed_usuario_senha,
+                financeiro_senha=settings.seed_financeiro_senha,
             )
         scheduler: BackgroundScheduler | None = None
         if settings.scheduler_enabled:
