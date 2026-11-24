@@ -50,6 +50,17 @@ $font-size-base: 1rem;
 
 // Alvos interativos com pelo menos 44 px de altura (RNF-FE-23)
 $input-btn-padding-y: 0.625rem;
+$nav-link-padding-y: 0.75rem;
+
+// --- Barra de navegação laranja: texto, links e ícone em Preto (RNF-FE 2.2; nunca navbar-dark) ---
+$navbar-light-color: $preto;
+$navbar-light-hover-color: $preto;
+$navbar-light-active-color: $preto;
+$navbar-light-disabled-color: $cinza;
+$navbar-light-icon-color: $preto;
+$navbar-light-toggler-border-color: $preto;
+$navbar-light-brand-color: $preto;
+$navbar-light-brand-hover-color: $preto;
 
 // Sem tema escuro nesta fase (extensão opcional 3 do RF-FE-001)
 $enable-dark-mode: false;
@@ -66,3 +77,24 @@ $theme-colors: map-merge(
 );
 
 @import 'bootstrap/scss/bootstrap';
+
+// CSS próprio, só para o que o Bootstrap não cobre, reutilizando as variáveis do tema.
+// Botões de ícone da barra (hambúrguer e pesquisar): mesmo tamanho (>= 44 px, RNF-FE-23) para o
+// logo ficar visualmente centrado entre eles no mobile.
+.navbar-botao-icone {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  padding: 0;
+}
+
+// Links da barra: o hover não muda a cor (tudo é Preto), então ganha sublinhado.
+.navbar .nav-link:hover {
+  text-decoration: underline;
+}
+
+.navbar-empresa {
+  max-width: 16rem;
+}
