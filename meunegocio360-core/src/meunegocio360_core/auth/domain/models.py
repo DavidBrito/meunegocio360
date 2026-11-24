@@ -2,14 +2,9 @@
 
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from enum import StrEnum
 from uuid import UUID
 
-
-class Perfil(StrEnum):
-    # RF-BE-002 substitui USUARIO por OPERADOR_COMERCIAL e OPERADOR_FINANCEIRO.
-    ADMIN = "ADMIN"
-    USUARIO = "USUARIO"
+from meunegocio360_core.shared.perfil import Perfil
 
 
 @dataclass(slots=True)

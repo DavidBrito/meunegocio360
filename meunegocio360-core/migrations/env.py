@@ -4,6 +4,7 @@ from alembic import context
 from sqlalchemy import create_engine
 
 import meunegocio360_core.auth.infra.models  # noqa: F401 - registra os modelos no metadata
+import meunegocio360_core.empresa.infra.models  # noqa: F401
 from meunegocio360_core.shared.config import get_settings
 from meunegocio360_core.shared.db import Base
 

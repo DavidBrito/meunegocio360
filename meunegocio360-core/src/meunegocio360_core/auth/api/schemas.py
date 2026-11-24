@@ -1,19 +1,13 @@
 """DTOs de entrada e saida da API de autenticacao (camelCase, RNF-BE-11)."""
 
-import re
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
-from pydantic.alias_generators import to_camel
+from pydantic import Field, field_validator
 
 from meunegocio360_core.auth.application.dto import AuthResult, UsuarioDados
 from meunegocio360_core.shared.config import PASSWORD_MAX, PASSWORD_MIN
-
-_EMAIL = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
-
-
-class CamelModel(BaseModel):
-    model_config = ConfigDict(alias_generator=to_camel, populate_by_name=True)
+from meunegocio360_core.shared.schemas import CamelModel
+from meunegocio360_core.shared.validators import is_valid_email
 
 
 class LoginRequest(CamelModel):
@@ -24,7 +18,7 @@ class LoginRequest(CamelModel):
     @classmethod
     def _normalizar_email(cls, value: str) -> str:
         email = value.strip().lower()  # RN-01
-        if not _EMAIL.match(email):
+        if not is_valid_email(email):
             raise ValueError("deve ser um e-mail válido")
         return email
 

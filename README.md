@@ -212,6 +212,14 @@ if (pm.response.code === 200) {
 }
 ```
 
+### Verificação manual da empresa na Swagger UI (RF-BE-002)
+
+Pré-requisitos: banco e backend no ar (`APP_ENV=dev`), `/docs` aberto e o *seed* com os três usuários: `admin@meunegocio360.com.br` (`ADMIN`), `usuario@meunegocio360.com.br` (`OPERADOR_COMERCIAL`) e `financeiro@meunegocio360.com.br` (`OPERADOR_FINANCEIRO`), com as senhas `SEED_*` do `.env`. O *seed* **não** cria empresa. Para trocar de usuário, faça novo login e use **Authorize** de novo (*Logout* no diálogo antes).
+
+1. **Primeiro cadastro e unicidade (ADMIN):** `GET /empresa` → `404 COMPANY_NOT_REGISTERED`; `POST /empresa` com `cnpj` `11222333000180` → `400 VALIDATION_ERROR` com erro em `cnpj`; `POST` com `razaoSocial` e `cnpj` `11222333000181` → `201` com `ativa: true`, `fusoHorario` `America/Sao_Paulo`, `moeda` `BRL` e cabeçalho `Location`; `GET` → `200`; `POST` com o mesmo CNPJ → `409 COMPANY_CNPJ_DUPLICATE`; `POST` com outro CNPJ válido (`11444777000161`) → `409 COMPANY_ALREADY_ACTIVE`.
+2. **Edição, controle otimista e ciclo de vida (ADMIN):** `PUT /empresa/{id}` com `versao` 0 → `200` e `versao` 1; repetir com `versao` 0 → `409 VERSION_CONFLICT`; `PATCH /empresa/{id}/situacao` com `{"ativa": false, "versao": 1}` → `200`; `GET` → `404`; `POST` de uma segunda empresa (`11444777000161`) → `201`; reativar a primeira → `409 COMPANY_ALREADY_ACTIVE`; inativar a segunda e reativar a primeira → `200`.
+3. **Autorização por perfil e perfis migrados:** logado como `usuario@` e depois como `financeiro@`: `GET /empresa` → `200`; `POST`, `PUT` e `PATCH` → `403 ACCESS_DENIED`; `GET /auth/me` mostra `OPERADOR_COMERCIAL` / `OPERADOR_FINANCEIRO` (o perfil `USUARIO` não existe mais); sem **Authorize** → `401`.
+
 ### Cadastro de empresa no Postman (RF-BE-002)
 
 Use um banco de desenvolvimento com as migrations V1–V4 aplicadas e sem empresa ativa. O seed `dev` disponibiliza as contas `admin@meunegocio360.com.br`, `usuario@meunegocio360.com.br` (`OPERADOR_COMERCIAL`) e `financeiro@meunegocio360.com.br` (`OPERADOR_FINANCEIRO`); senhas são as variáveis secretas `SEED_ADMIN_SENHA`, `SEED_USUARIO_SENHA` e `SEED_FINANCEIRO_SENHA` do `.env`. Não inclua senhas em exemplos ou coleções compartilhadas.

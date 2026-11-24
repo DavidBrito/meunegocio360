@@ -1,6 +1,9 @@
 """Seed de desenvolvimento (somente ``APP_ENV=dev``, RNF-BE-24). Idempotente.
 
-As senhas vem de ``SEED_ADMIN_SENHA`` e ``SEED_USUARIO_SENHA``; nunca ficam no repositorio.
+Cria um usuario por perfil e NAO cria empresa (RN-08 do RF-BE-002).
+
+As senhas vem de ``SEED_ADMIN_SENHA``, ``SEED_USUARIO_SENHA`` e ``SEED_FINANCEIRO_SENHA``;
+nunca ficam no repositorio.
 """
 
 import logging
@@ -23,11 +26,23 @@ def seed_dev_users(
     *,
     admin_senha: SecretStr | None,
     usuario_senha: SecretStr | None,
+    financeiro_senha: SecretStr | None,
 ) -> None:
     agora = clock.now()
     candidatos = [
         ("Administrador", "admin@meunegocio360.com.br", Perfil.ADMIN, admin_senha),
-        ("Usuário", "usuario@meunegocio360.com.br", Perfil.USUARIO, usuario_senha),
+        (
+            "Operador Comercial",
+            "usuario@meunegocio360.com.br",
+            Perfil.OPERADOR_COMERCIAL,
+            usuario_senha,
+        ),
+        (
+            "Operador Financeiro",
+            "financeiro@meunegocio360.com.br",
+            Perfil.OPERADOR_FINANCEIRO,
+            financeiro_senha,
+        ),
     ]
     with uow_factory() as uow:
         for nome, email, perfil, senha in candidatos:

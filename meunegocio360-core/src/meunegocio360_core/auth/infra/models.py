@@ -24,7 +24,10 @@ class UsuarioModel(Base):
     __tablename__ = "usuario"
     __table_args__ = (
         UniqueConstraint("email", name="uk_usuario_email"),
-        CheckConstraint("perfil IN ('ADMIN', 'USUARIO')", name="ck_usuario_perfil"),
+        CheckConstraint(
+            "perfil IN ('ADMIN', 'OPERADOR_COMERCIAL', 'OPERADOR_FINANCEIRO')",
+            name="ck_usuario_perfil",
+        ),
     )
 
     id: Mapped[UUID] = mapped_column(Uuid, primary_key=True)

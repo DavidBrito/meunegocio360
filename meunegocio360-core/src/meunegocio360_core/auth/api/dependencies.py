@@ -3,7 +3,6 @@
 from functools import lru_cache
 
 from fastapi import Depends, Request
-from fastapi.security import HTTPBearer
 
 from meunegocio360_core.auth.application.current_user import GetCurrentUserUseCase
 from meunegocio360_core.auth.application.dto import AuthConfig
@@ -21,10 +20,6 @@ from meunegocio360_core.shared.config import Settings, get_settings
 from meunegocio360_core.shared.db import get_session_factory
 from meunegocio360_core.shared.errors import AppError
 from meunegocio360_core.shared.security import AccessClaims
-
-# Apenas para documentar o esquema Bearer no OpenAPI (botao "Authorize" da Swagger UI).
-# A validacao real do token e feita pelo AuthGateMiddleware.
-bearer_scheme = HTTPBearer(auto_error=False, description="Token de acesso (JWT) do login.")
 
 
 def uow_factory() -> SqlAlchemyUnitOfWork:

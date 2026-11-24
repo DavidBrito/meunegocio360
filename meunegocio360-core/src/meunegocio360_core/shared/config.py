@@ -45,6 +45,7 @@ class Settings(BaseSettings):
 
     seed_admin_senha: SecretStr | None = None
     seed_usuario_senha: SecretStr | None = None
+    seed_financeiro_senha: SecretStr | None = None
 
     scheduler_enabled: bool = True
 
@@ -71,12 +72,14 @@ class Settings(BaseSettings):
             raise ValueError(f"JWT_SECRET deve ter pelo menos {JWT_SECRET_MIN_BYTES} bytes")
         return value
 
-    @field_validator("seed_admin_senha", "seed_usuario_senha", mode="before")
+    @field_validator(
+        "seed_admin_senha", "seed_usuario_senha", "seed_financeiro_senha", mode="before"
+    )
     @classmethod
     def _seed_vazio_vira_none(cls, value: object) -> object:
         return None if value == "" else value
 
-    @field_validator("seed_admin_senha", "seed_usuario_senha")
+    @field_validator("seed_admin_senha", "seed_usuario_senha", "seed_financeiro_senha")
     @classmethod
     def _seed_tamanho(cls, value: SecretStr | None) -> SecretStr | None:
         if value is not None:

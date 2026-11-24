@@ -1,6 +1,6 @@
 """Seguranca transversal: gate *deny-by-default* e cabecalhos (RNF-021, RNF-BE-40/41)."""
 
-from collections.abc import Collection
+from collections.abc import Callable, Collection
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Protocol
@@ -11,7 +11,8 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
-from meunegocio360_core.shared.errors import problem_response
+from meunegocio360_core.shared.errors import AppError, problem_response
+from meunegocio360_core.shared.perfil import Perfil
 
 
 @dataclass(frozen=True, slots=True)
@@ -113,3 +114,33 @@ class SecurityHeadersMiddleware:
             await send(message)
 
         await self.app(scope, receive, send_with_headers)
+
+
+def require_perfis(*permitidos: Perfil) -> Callable[[Request], AccessClaims]:
+    """Autorizacao por perfil (RNF-BE-47): dependencia a aplicar em cada operacao protegida.
+
+    O gate ja validou o token; aqui so se confere a claim ``perfil``. Sem permissao:
+    ``403 ACCESS_DENIED``. E regra de acesso, nao de negocio.
+    """
+    aceitos = {perfil.value for perfil in permitidos}
+
+    def dependency(request: Request) -> AccessClaims:
+        claims: AccessClaims | None = request.scope.get("state", {}).get("claims")
+        if claims is None:  # nao deveria ocorrer: o gate ja barra rotas sem token
+            raise AppError(
+                401,
+                "UNAUTHORIZED",
+                "Não autenticado",
+                "Token de acesso ausente, inválido ou expirado.",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+        if claims.perfil not in aceitos:
+            raise AppError(
+                403,
+                "ACCESS_DENIED",
+                "Acesso negado",
+                "Seu perfil não tem permissão para esta operação.",
+            )
+        return claims
+
+    return dependency
