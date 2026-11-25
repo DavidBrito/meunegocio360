@@ -60,7 +60,7 @@ def _filtro_busca(q: str | None):  # noqa: ANN202
         return None
     termo = func.lower(func.f_unaccent(literal(escape_like(texto), String), type_=String))
     nome_normalizado = func.lower(func.f_unaccent(ClienteModel.nome, type_=String)).collate(
-        '"default"'
+        "default"
     )
     condicoes = [nome_normalizado.like(func.concat("%", termo, "%"), escape="\\")]
     if _SO_DIGITOS_E_MASCARA.fullmatch(texto):

@@ -128,14 +128,21 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.add_middleware(SecurityHeadersMiddleware, hsts=settings.is_prod)
     app.add_middleware(RequestIdMiddleware)
 
-    # Erros de validacao saem como 400 (RNF-BE-14), nao 422: remove o 422 padrao do OpenAPI.
+    # Erros de validacao saem como 400 (RNF-BE-14), nao 422: remove so o 422 PADRAO do FastAPI
+    # (schema HTTPValidationError); o 422 COMPANY_NOT_ACTIVE documentado nas rotas permanece.
     gerar_openapi = app.openapi
+
+    def _e_422_padrao(resposta: dict) -> bool:
+        conteudo = resposta.get("content", {}).get("application/json", {})
+        return "HTTPValidationError" in str(conteudo.get("schema", {}))
 
     def openapi_sem_422() -> dict:
         schema = gerar_openapi()
         for caminho in schema.get("paths", {}).values():
             for operacao in caminho.values():
-                operacao.get("responses", {}).pop("422", None)
+                respostas = operacao.get("responses", {})
+                if "422" in respostas and _e_422_padrao(respostas["422"]):
+                    del respostas["422"]
         return schema
 
     app.openapi = openapi_sem_422  # type: ignore[method-assign]

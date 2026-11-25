@@ -240,7 +240,8 @@ def alterar_situacao(
     description=(
         "Só é permitida sem vínculos (venda ou OS); caso contrário `422 CUSTOMER_HAS_HISTORY` "
         "e o cliente deve ser inativado (RNF-097). Os vínculos são consultados pelos "
-        "verificadores registrados por cada módulo (ponto de extensão, RN-06)."
+        "verificadores registrados por cada módulo (ponto de extensão, RN-06). Sem empresa "
+        "ativa, também responde `422 COMPANY_NOT_ACTIVE`."
     ),
     dependencies=acesso,
     responses={
