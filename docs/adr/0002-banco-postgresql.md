@@ -26,6 +26,8 @@ PostgreSQL (versão 16 ou superior; confirmar a versão disponível no Render na
 | `CHECK` de preço (RF-BE-005) | igual (`CHECK` é aplicado) |
 | Testcontainers MySQL | testcontainers-python com PostgreSQL (RNF-BE-25) |
 
+> **Atualização (RF-BE-003):** a busca sem acento e caixa foi validada no PostgreSQL 16 e a estratégia final difere da proposta acima (ICU só para ordenar/igualar; "contém" por `unaccent` + `COLLATE "default"`). Ver [ADR 0006](./0006-busca-sem-acento-e-caixa.md).
+
 ## Consequências
 
 - Os arquivos `RF-BE-*` continuam descrevendo tabelas com tipos MySQL; devem ser lidos com esta tabela. Os nomes de tabelas, colunas e restrições (`pk_cliente`, `fk_cliente_empresa`, `uk_empresa_ativa_unica`…) permanecem.

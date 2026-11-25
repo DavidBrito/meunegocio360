@@ -6,7 +6,7 @@
 > **Depende de:** [RF-BE-002](./RF-BE-002.md) (empresa ativa e perfis).  
 > **Consumido por:** [RF-FE-003](../frontend/RF-FE-003.md) e, futuramente, vendas, equipamentos e ordens de serviço (esta última no serviço Serviços, que consulta o cliente por API e guarda apenas o seu `id`, RNF-090).
 
-> **⚠ Adaptação neste fork (Python/FastAPI + PostgreSQL):** comportamento, contratos e critérios de aceite **continuam valendo**; os termos de tecnologia são lidos conforme os ADRs [0001](../../adr/0001-backend-python-fastapi.md), [0002](../../adr/0002-banco-postgresql.md) (tipos `UUID`, *collation* `utf8mb4_0900_ai_ci` → estratégia ICU/`unaccent`, **a validar neste RF**), [0003](../../adr/0003-sqlalchemy-sincrono-e-alembic.md) (`V5` = revisão `0005`) e [0005](../../adr/0005-swagger-em-docs.md) (Swagger UI em `/docs`).
+> **⚠ Adaptação neste fork (Python/FastAPI + PostgreSQL):** comportamento, contratos e critérios de aceite **continuam valendo**; os termos de tecnologia são lidos conforme os ADRs [0001](../../adr/0001-backend-python-fastapi.md), [0002](../../adr/0002-banco-postgresql.md) (tipos `UUID`; *collation* `utf8mb4_0900_ai_ci` → *collation* ICU `ci_ai` para ordenar/igualar e busca por `unaccent`, **validado**: ver [ADR 0006](../../adr/0006-busca-sem-acento-e-caixa.md)), [0003](../../adr/0003-sqlalchemy-sincrono-e-alembic.md) (`V5` = revisão `0005`) e [0005](../../adr/0005-swagger-em-docs.md) (Swagger UI em `/docs`).
 
 ## História de usuário
 
