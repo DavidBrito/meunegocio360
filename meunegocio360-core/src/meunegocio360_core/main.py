@@ -13,6 +13,7 @@ from meunegocio360_core.auth.api.dependencies import get_hasher, get_jwt_service
 from meunegocio360_core.auth.api.router import router as auth_router
 from meunegocio360_core.auth.application.cleanup import CleanupRefreshTokensUseCase
 from meunegocio360_core.auth.infra.seed import seed_dev_users
+from meunegocio360_core.cliente.api.router import router as cliente_router
 from meunegocio360_core.empresa.api.router import router as empresa_router
 from meunegocio360_core.shared.clock import SystemClock
 from meunegocio360_core.shared.config import Settings, get_settings
@@ -84,12 +85,19 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         ),
         openapi_tags=[
             {
+                "name": "Clientes",
+                "description": (
+                    "Cadastro de clientes da empresa ativa. `ADMIN` e `OPERADOR_COMERCIAL`; "
+                    "o financeiro recebe `403`. Busca por nome (sem acento/caixa) ou documento."
+                ),
+            },
+            {
                 "name": "Empresa",
                 "description": (
                     "Cadastro da empresa única ativa e seus parâmetros. Somente `ADMIN` escreve; "
                     "qualquer perfil autenticado consulta."
                 ),
-            }
+            },
         ],
         docs_url="/docs" if docs else None,
         redoc_url=None,
@@ -101,6 +109,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(health_router)
     app.include_router(auth_router)
     app.include_router(empresa_router)
+    app.include_router(cliente_router)
 
     # Ordem: o ultimo adicionado e o mais externo.
     app.add_middleware(

@@ -33,4 +33,4 @@ src = ["src"]
 select = ["E", "F", "I", "B", "UP", "N"]
 
 [tool.ruff.lint.flake8-bugbear]
-extend-immutable-calls = ["fastapi.Depends", "fastapi.Security", "fastapi.Cookie"]
+extend-immutable-calls = ["fastapi.Depends", "fastapi.Security", "fastapi.Cookie", "fastapi.Query"]
