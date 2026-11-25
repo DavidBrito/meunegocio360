@@ -240,6 +240,14 @@ Configure no ambiente Postman `baseUrl=http://localhost:8080`. Para cada fluxo, 
 
 Os erros usam `application/problem+json`. Não limpe volumes de banco com dados que precisem ser preservados; prepare um banco de desenvolvimento sem empresa ativa para o primeiro fluxo.
 
+### Verificação manual de clientes na Swagger UI (RF-BE-003)
+
+Pré-requisitos: banco e backend no ar (`APP_ENV=dev`), `/docs` aberto, **empresa ativa** cadastrada (como `admin@`, `POST /empresa`) e os usuários do *seed*. Clientes são acessíveis a `admin@` e `usuario@` (operador comercial); `financeiro@` recebe `403`. Para trocar de usuário: faça o login e use **Authorize** de novo (*Logout* no diálogo antes).
+
+1. **Cadastro, validação e permissões (`usuario@`):** `POST /clientes` com `tipoPessoa` `FISICA`, `nome` "Maria da Silva" e `documento` `529.982.247-25` → `201`, `Location` e `documento` `52998224725`, `ativo` `true`; com `JURIDICA` e `11222333000181` → `201`; `FISICA` com `11222333000181` ou com CPF `52998224724` → `400` com erro em `documento`; o mesmo CPF com e sem máscara → `409 CUSTOMER_DOCUMENT_DUPLICATE`; como `financeiro@` → `403 ACCESS_DENIED`; sem **Authorize** → `401`; com a empresa inativada (`admin@`, `PATCH /empresa/{id}/situacao`) → `422 COMPANY_NOT_ACTIVE`.
+2. **Busca, listagem e situação:** crie "José Antônio" (CPF `111.444.777-35`). `GET /clientes?q=jose antonio`, `q=JOSÉ`, `q=111.444` e `q=11144` o encontram; um cliente "João 100% Útil" só aparece com `q=100%`; a listagem padrão traz apenas ativos ordenados por `nome` (sem distinguir acento/caixa), com `page`, `size`, `totalElements` e `totalPages`; `situacao=INATIVO` e `TODOS`; `size=101` e `sort=senha` → `400`. `PATCH /clientes/{id}/situacao` com `{"ativo": false, "versao": 0}` → o cliente some da listagem padrão e continua em `GET /clientes/{id}`; reativar o traz de volta.
+3. **Edição, exclusão e isolamento por empresa:** `PUT /clientes/{id}` com `versao` `0` → `200` com `versao` `1`; repetir com `versao` `0` → `409 VERSION_CONFLICT`; `DELETE` de um cliente sem vínculos → `204`, e `GET` → `404 CUSTOMER_NOT_FOUND`. Isolamento: com um cliente na empresa A, como `admin@` inative a A (`PATCH /empresa/{id}/situacao`) e cadastre a B (`POST /empresa`, outro CNPJ): o `GET` do cliente da A passa a dar `404`. (`CUSTOMER_HAS_HISTORY` só pode ser exercitado quando existir um módulo com vínculos, como vendas; até lá é verificado com um verificador simulado.)
+
 ### Cadastro de clientes no Postman (RF-BE-003)
 
 Pré-requisitos: migrations V1–V5 aplicadas, empresa ativa cadastrada, aplicação em `dev` e Postman com `baseUrl=http://localhost:8080`. Para cada fluxo, autentique-se por `POST {{baseUrl}}/api/v1/auth/login` com a conta daquele perfil e envie o `accessToken` no cabeçalho Bearer. Use as senhas configuradas nas variáveis locais de ambiente; não as salve em coleções compartilhadas. A empresa nunca é informada no corpo: a API sempre usa a empresa ativa.

@@ -13,6 +13,7 @@ from meunegocio360_core.auth.api.dependencies import get_hasher, get_jwt_service
 from meunegocio360_core.auth.api.router import router as auth_router
 from meunegocio360_core.auth.application.cleanup import CleanupRefreshTokensUseCase
 from meunegocio360_core.auth.infra.seed import seed_dev_users
+from meunegocio360_core.cliente.api.router import router as cliente_router
 from meunegocio360_core.empresa.api.router import router as empresa_router
 from meunegocio360_core.shared.clock import SystemClock
 from meunegocio360_core.shared.config import Settings, get_settings
@@ -84,12 +85,19 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         ),
         openapi_tags=[
             {
+                "name": "Clientes",
+                "description": (
+                    "Cadastro de clientes da empresa ativa. `ADMIN` e `OPERADOR_COMERCIAL`; "
+                    "o financeiro recebe `403`. Busca por nome (sem acento/caixa) ou documento."
+                ),
+            },
+            {
                 "name": "Empresa",
                 "description": (
                     "Cadastro da empresa única ativa e seus parâmetros. Somente `ADMIN` escreve; "
                     "qualquer perfil autenticado consulta."
                 ),
-            }
+            },
         ],
         docs_url="/docs" if docs else None,
         redoc_url=None,
@@ -101,6 +109,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(health_router)
     app.include_router(auth_router)
     app.include_router(empresa_router)
+    app.include_router(cliente_router)
 
     # Ordem: o ultimo adicionado e o mais externo.
     app.add_middleware(
@@ -119,14 +128,21 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.add_middleware(SecurityHeadersMiddleware, hsts=settings.is_prod)
     app.add_middleware(RequestIdMiddleware)
 
-    # Erros de validacao saem como 400 (RNF-BE-14), nao 422: remove o 422 padrao do OpenAPI.
+    # Erros de validacao saem como 400 (RNF-BE-14), nao 422: remove so o 422 PADRAO do FastAPI
+    # (schema HTTPValidationError); o 422 COMPANY_NOT_ACTIVE documentado nas rotas permanece.
     gerar_openapi = app.openapi
+
+    def _e_422_padrao(resposta: dict) -> bool:
+        conteudo = resposta.get("content", {}).get("application/json", {})
+        return "HTTPValidationError" in str(conteudo.get("schema", {}))
 
     def openapi_sem_422() -> dict:
         schema = gerar_openapi()
         for caminho in schema.get("paths", {}).values():
             for operacao in caminho.values():
-                operacao.get("responses", {}).pop("422", None)
+                respostas = operacao.get("responses", {})
+                if "422" in respostas and _e_422_padrao(respostas["422"]):
+                    del respostas["422"]
         return schema
 
     app.openapi = openapi_sem_422  # type: ignore[method-assign]

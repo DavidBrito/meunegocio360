@@ -21,7 +21,8 @@ Legenda de autoria: **[Usuário]** decisão do autor humano · **[IA]** proposta
 | 24/11/2026 | 3. RF-FE-001 — login (frontend) | Tela de login, sessão em memória, renovação single-flight | PR #2 (mergeado) |
 | 24/11/2026 | 4. RF-BE-002 — empresa e perfis (backend) | Implementado, verificado e mergeado | PR #3 (chore) e PR #4 (RF-BE-002), mergeados |
 | 24/11/2026 | 5. Adendo ao RF-BE-002: `GET /empresa/inativas` | Endpoint de empresas inativas (reativação), paginação compartilhada | branch `feat/rf-be-002-empresas-inativas` |
-| 24/11/2026 | 6. RF-FE-002 — empresa, layout e guardas (frontend) | Implementado e verificado em Chrome headless (seção 3.7); PRs ainda não abertos | branch `feat/rf-fe-002-empresa` (empilhada na `feat/rf-be-002-empresas-inativas`) |
+| 24/11/2026 | 6. RF-FE-002 — empresa, layout e guardas (frontend) | Implementado, verificado e mergeado | PR #5 (adendo backend) e PR #6 (frontend) |
+| 24/11/2026 | 7. RF-BE-003 — clientes (backend) + checagem de collation/unaccent (ADR 0006) | Implementado e verificado (seção 3.8); PR ainda não aberto | branch `feat/rf-be-003-clientes` |
 
 ---
 
@@ -82,6 +83,15 @@ Os prompts abaixo são reproduzidos como foram escritos. As menções `@arquivo`
 > Implemente o requisito RF-FE-002, considerando as especificações gerais do projeto e específicas dessa funcionalidade. No menu de navegação, use a imagem para a brand assets\logo_meunegocio360_v1_branca.png localizado à esquerda dos itens do menu, no caso de telas grandes; em telas de dispositivos móveis, incluir ao centro entre o ícone de hambúrguer e o ícone de pesquisar, respeitando a paleta de cores do sistema, definida em RNF-FE.md. Explique as modificações aplicadas com referências à documentação de requisitos e liste 3 testes manuais a serem realizados no navegador que atendam os critérios de aceitação especificados. Dê atenção a usabilidade e disposição dos itens no menu.
 
 *(Respostas do autor às perguntas do plano: ícone de pesquisar = placeholder desabilitado; reativação = acrescentar endpoint no backend; PRs #3 e #4 mergeados na `main`, usar a `main` como base.)*
+
+### P11 — Implementar o RF-BE-003 (modo `/plan`)
+> @docs/requisitos/GERAIS.md @docs/requisitos/backend/RNF-BE.md
+>
+> Atue como desenvolvedor de software sênior.
+> Implemente o requisito RF-BE-003, considerando as especificações gerais do projeto e específicas dessa funcionalidade. Liste 3 testes manuais a serem realizados no navegador com swagger que atendam os critérios de aceitação especificados.
+> . Antes faça uma checagem rápida de collation e unaccent para atender a ADR 0002
+
+*(Pedido anterior, de fechamento do RF-FE-002: "Faça o push e abra os PRs".)*
 
 ### Padrão observado nos prompts (para reaproveitar)
 1. **Contexto fixo por `@`:** `GERAIS.md` + `RNF-BE.md` (ou `RNF-FE.md`) em todo pedido de requisito; o RF é citado pelo ID.
@@ -201,6 +211,20 @@ Cada decisão tem **autor**, **alternativas** e **ponto para repensar** (impacto
 | D-094 | `RequireRole` mostra **"Acesso negado" sem redirecionar** e fica em `features/auth` (concerne a perfil, não à empresa). | IA | Redirecionar ao início. | A guarda do cadastro fica abaixo do `EmpresaProvider`: a consulta da empresa (feita uma vez por sessão para a barra) acontece mesmo em "Acesso negado"; a **página** não faz requisição. | Fácil |
 | D-095 | **Correção de um bug de UX encontrado nos testes:** após **Sair**, o próximo usuário era levado à última página do anterior; agora a saída voluntária não preserva `from` (flag `saiu`). | IA (achado ao testar) | Limpar `from` no login. | Visitante sem sessão e sessão expirada continuam preservando a rota (RF-FE-001). | Fácil |
 
+### 3.8 RF-BE-003 — Clientes e busca sem acento (ADR 0006)
+
+| ID | Decisão | Autor | Alternativas / contexto | Ponto para repensar | Reversível? |
+| --- | --- | --- | --- | --- | --- |
+| D-100 | **Busca "contém" sem acento/caixa** por `lower(f_unaccent(nome)) COLLATE "default" LIKE … ESCAPE '\'`; a *collation* ICU `ci_ai` só ordena e iguala. Resolve a pendência do ADR 0002 ([ADR 0006](./adr/0006-busca-sem-acento-e-caixa.md)). | IA, a partir de uma checagem pedida pelo usuário | Só ICU (não suporta `LIKE` no PG 16); coluna gerada + `pg_trgm`; citext. | Sem índice *trigram*: seq scan filtrado por `empresa_id` (tabela pequena). Revisar com volume. | Médio |
+| D-101 | A migration `0005` cria `unaccent`, a *collation* `ci_ai` e `f_unaccent` (reaproveitadas por RF-BE-004/005). | IA | Migration separada (mudaria a numeração V5=0005 dos RF seguintes). | Depende de o PostgreSQL do Render permitir `CREATE EXTENSION unaccent` e *collation* ICU: **não verificado**. | Médio |
+| D-102 | `documento` do cliente **aceita máscara** e é normalizado; a empresa exige só dígitos (D-069). | IA (o RF-BE-003 exige nos cenários) | Padronizar tudo em só dígitos. | Contratos diferentes entre empresa e cliente: decidir um padrão antes dos RF-FE. | Fácil |
+| D-103 | Busca por documento = **prefixo** dos dígitos, só quando o termo tem só dígitos/máscara; senão só nome. | IA | "Contém" nos dígitos; sempre buscar nos dois. | Os exemplos do RF (`529.982`, `52998`) são prefixos; digitar o final do CPF não acha. | Fácil |
+| D-104 | **Sem empresa ativa, todas as operações de clientes (inclusive leitura) → `422 COMPANY_NOT_ACTIVE`.** | IA | Leitura sem filtro de empresa (vazaria clientes de outras empresas). | A RN-04 do RF-BE-002 diz que consultas "continuam permitidas"; aqui não há contexto para filtrar. | Fácil |
+| D-105 | `CUSTOMER_HAS_HISTORY` verificado com um **verificador simulado**, num 2º servidor de teste **fora do repositório**. | IA (RF prevê verificador simulado) | Endpoint/flag de teste no código (rejeitado). | Não é exercitável na Swagger até haver vendas. | Fácil |
+| D-106 | `telefone` só dígitos; `Location` → `/api/v1/clientes/{id}`; `PATCH` verifica a versão antes de ser idempotente. | IA (padrão da empresa) | Aceitar máscara no telefone. | — | Fácil |
+| D-107 | **Perfil antes da empresa**: o `403` do financeiro vem antes do `422` por falta de empresa (as dependências do router rodam primeiro). | IA | Inverter a ordem. | Evita revelar o estado da empresa a quem não tem acesso. | Fácil |
+| D-108 | `ExcluirCliente` consulta os verificadores **registrados a cada chamada** (`registrar_verificador_vinculo`), sem acoplar a `cliente` a vendas/OS. | IA (RN-06) | Consulta direta às tabelas de vendas (proibida). | Quem criar vínculos precisa lembrar de registrar o seu verificador na inicialização (risco de esquecer e permitir excluir cliente com histórico). | Médio |
+
 ---
 
 ## 4. Uso da IA: acertos, erros e lições
@@ -219,6 +243,9 @@ Cada decisão tem **autor**, **alternativas** e **ponto para repensar** (impacto
 | O lint do React 19 (`react-hooks/refs`) rejeitou o `field` do `Controller` e o `ref` lido dentro do callback do `handleSubmit`. | Regra do projeto | Adaptado (`MaskedInput` recebe props soltas; guarda de envio no *handler* do evento). |
 | Dois servidores Vite (portas 5173 e 5174) e Chrome de execuções anteriores ficaram vivos; testes de timing falsos (React mantém a tela antiga durante o carregamento *lazy*). | Falha de ambiente/teste | Esperar a tela estabilizar antes de ler o texto; encerrar processos por PID/porta. |
 | `pkill -f` com o padrão presente na própria linha de comando derrubou o shell **de novo**. | Falha de ferramenta | Usar PID/porta (já anotado). |
+| Passei `'"default"'` ao `.collate()` do SQLAlchemy, que já cita o nome: o SQL ficou `COLLATE ""default""` e **toda busca por `q` deu 500**, enquanto o resto do roteiro passava. | Erro da IA | Visto no log do servidor; corrigido para `.collate("default")` e conferido o SQL compilado. Lição: **verificar cada caminho do contrato**, não só o caso feliz. |
+| Meu filtro que removia o `422` padrão do FastAPI do OpenAPI removia **também** o `422 COMPANY_NOT_ACTIVE` documentado nas rotas. | Erro da IA | Achado por uma verificação do OpenAPI; o filtro agora remove só o `422` de `HTTPValidationError`. |
+| A checagem de collation (pedida antes da implementação) **contrariou parte do ADR 0002** (ICU não faz `LIKE` no PG 16). | Acerto de processo | Evitou implementar a estratégia errada; virou o ADR 0006. Lição: validar a premissa de risco **antes** de codar. |
 | Um comando `pkill -f` derrubou o próprio shell da sessão (padrão contido na linha de comando). | Falha de ferramenta | Sem impacto no repositório; passou a matar por PID/porta. |
 | Divergência de fluxo: o README manda *squash* e `main` protegida; o autor optou por merge commit e branches mantidas. | Decisão consciente | D-010, D-011. |
 
@@ -236,6 +263,8 @@ Cada decisão tem **autor**, **alternativas** e **ponto para repensar** (impacto
 8. **Rever D-063/D-030**: reler o perfil no banco ou aceitar a janela de 15 min.
 9. **Ordem de merge atual:** PR do adendo `feat/rf-be-002-empresas-inativas` primeiro; depois o PR `feat/rf-fe-002-empresa` (empilhado).
 10. **Contrato do CNPJ:** decidir se empresa e cliente aceitam máscara (D-069) e se `versao` deve começar sempre em 0 (D-068).
+14. **Confirmar no Render** `CREATE EXTENSION unaccent` e *collation* ICU antes do primeiro deploy (ADR 0006, D-101).
+15. **Escolher um padrão** para documentos com/sem máscara entre empresa e cliente (D-102).
 12. **Rodar axe/Lighthouse** na barra, no formulário e nas páginas de acesso negado/aguardando (RF-FE-002; não medido).
 13. **Sincronizar** as duas implementações de CNPJ (Python e JavaScript) se uma mudar (D-092).
 11. **Validar com o autor** os códigos novos (`COMPANY_NOT_FOUND`) antes de o RF-FE-002 depender deles (D-061).
