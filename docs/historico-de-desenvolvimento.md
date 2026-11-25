@@ -21,7 +21,7 @@ Legenda de autoria: **[Usuário]** decisão do autor humano · **[IA]** proposta
 | 24/11/2026 | 3. RF-FE-001 — login (frontend) | Tela de login, sessão em memória, renovação single-flight | PR #2 (mergeado) |
 | 24/11/2026 | 4. RF-BE-002 — empresa e perfis (backend) | Implementado, verificado e mergeado | PR #3 (chore) e PR #4 (RF-BE-002), mergeados |
 | 24/11/2026 | 5. Adendo ao RF-BE-002: `GET /empresa/inativas` | Endpoint de empresas inativas (reativação), paginação compartilhada | branch `feat/rf-be-002-empresas-inativas` |
-| 24/11/2026 | 6. RF-FE-002 — empresa, layout e guardas (frontend) | Em andamento (seção 3.7) | branch `feat/rf-fe-002-empresa` |
+| 24/11/2026 | 6. RF-FE-002 — empresa, layout e guardas (frontend) | Implementado e verificado em Chrome headless (seção 3.7); PRs ainda não abertos | branch `feat/rf-fe-002-empresa` (empilhada na `feat/rf-be-002-empresas-inativas`) |
 
 ---
 
@@ -188,6 +188,18 @@ Cada decisão tem **autor**, **alternativas** e **ponto para repensar** (impacto
 | D-081 | **Novo endpoint `GET /empresa/inativas`** (ADMIN, paginado) para permitir a reativação após recarregar. É um **adendo ao RF-BE-002** (contrato que o requisito original não tem). | Usuário (a IA apontou a lacuna e ofereceu "reativar só na mesma sessão" como alternativa) | Guardar `id`/`versao` em memória (perde-se ao recarregar). | O fork passa a divergir do contrato original; documentado como adendo em `RF-BE-002.md`. | Médio |
 | D-082 | A listagem usa uma **paginação compartilhada** (`shared/pagination.py`: `page`, `size` ≤ 100, `sort` com lista permitida, `Page`), já pensada para RF-BE-003/004/005. | IA | Paginação só nesta rota. | O padrão do RNF-BE-13/16 fica definido uma vez; `AppError` ganhou `errors[]`. | Médio |
 | D-083 | A Parte A (backend) vai em **PR próprio, antes** do PR do frontend; a branch do FE sai dela (empilhada). | IA, aceito (plano aprovado) | Incluir o endpoint no PR do FE (mistura RF). | Ordem de merge: backend primeiro. | Fácil |
+| D-084 | **Logo branca sobre o laranja** da marca na barra, como o autor pediu, mesmo com o contraste de 3,7:1 (logotipo é isento de contraste de texto no WCAG 1.4.3). | Usuário pediu; IA avaliou o risco | Usar a logo preta; mudar o fundo da barra. | Conferido em captura (desktop e 360 px): legível, com traço grosso preenchido de branco. O RNF-FE 2.2 proíbe *texto* branco sobre o laranja; a logo é imagem. | Fácil |
+| D-085 | Navbar: texto, links e ícones **Pretos** (variáveis `$navbar-light-*` no tema); item ativo com **negrito + sublinhado + `aria-current`** (não só cor); hover sublinha. | IA (RNF-FE 2.2) | `navbar-dark`/texto branco (proibido). | Pequeno CSS próprio no tema (`.navbar-botao-icone`, `.navbar-empresa`). | Fácil |
+| D-086 | Mobile: `[☰][logo centralizado][🔍]` com os dois botões **do mesmo tamanho** (44 px) e a logo com `mx-auto`; menu empilhado que **fecha ao navegar**; `$nav-link-padding-y` ampliado (alvos ≥ 44 px). | IA | Logo à esquerda no mobile (não pedido). | Centralização depende de os botões terem a mesma largura (verificado: ±6 px). | Fácil |
+| D-087 | `EmpresaProvider` **bloqueia a renderização** (carregando/erro) para todas as rotas protegidas, em vez de só `RequireEmpresa` tratar o erro; a tela de erro tem **Tentar novamente** e **Sair**. | IA | Tratar o estado de erro só em `RequireEmpresa` (como diz o RF). | Evita *flash* e mantém uma única consulta; `/empresa` também fica coberta. | Médio |
+| D-088 | `GET /empresa` 404 vira **estado `ausente`**, não erro; após Inativar o cache vai a `null`, e as guardas redirecionam o ADMIN. | IA (RF-FE-002) | Tratar como erro genérico (ponto de atenção do RF). | — | Fácil |
+| D-089 | **Reativação pela lista** de inativas na tela de cadastro (sem confirmação extra; o RF só exige confirmar a inativação). | IA | Modal também na reativação. | Ação reversível (basta inativar de novo). | Fácil |
+| D-090 | O destino pós-sucesso (`/` após cadastrar, `/empresa` após reativar) é guardado em **estado do React antes da requisição**, pois o cache atualiza antes de o envio resolver. | IA | `ref` (proibido ler `ref.current` em render pelo lint do React 19). | Detalhe sutil de ordem de eventos; revisar. | Fácil |
+| D-091 | O campo **Moeda** é um `select` desabilitado **fora do formulário** (valor `BRL` fixo no payload), pois o RHF devolve `undefined` para campos `disabled`. | IA | Registrar o campo desabilitado. | Quando houver outras moedas, vira campo registrado. | Fácil |
+| D-092 | CNPJ e telefone usam `Controller` + `MaskedInput` (valor mascarado no estado, **só dígitos no payload**); funções únicas em `shared/lib/documentos.js`. | IA (RNF-FE-28, RNF-015) | Biblioteca de máscara (proibida pelo RF). | O algoritmo do CNPJ existe em Python e em JavaScript: manter sincronizados. | Médio |
+| D-093 | O menu é uma lista (`app/menu.js`) com os perfis de cada item; os RF seguintes só acrescentam linhas. | IA | `if` por perfil no JSX. | — | Fácil |
+| D-094 | `RequireRole` mostra **"Acesso negado" sem redirecionar** e fica em `features/auth` (concerne a perfil, não à empresa). | IA | Redirecionar ao início. | A guarda do cadastro fica abaixo do `EmpresaProvider`: a consulta da empresa (feita uma vez por sessão para a barra) acontece mesmo em "Acesso negado"; a **página** não faz requisição. | Fácil |
+| D-095 | **Correção de um bug de UX encontrado nos testes:** após **Sair**, o próximo usuário era levado à última página do anterior; agora a saída voluntária não preserva `from` (flag `saiu`). | IA (achado ao testar) | Limpar `from` no login. | Visitante sem sessão e sessão expirada continuam preservando a rota (RF-FE-001). | Fácil |
 
 ---
 
@@ -202,6 +214,11 @@ Cada decisão tem **autor**, **alternativas** e **ponto para repensar** (impacto
 | Versões de bibliotecas posteriores ao conhecimento da IA. | Risco | Conferidas no `node_modules`/`uv` (D-052). |
 | Os scripts de verificação ponta a ponta não estão no repositório. | Limitação | D-058. |
 | Um servidor antigo ficou ocupando a porta 8080 e o novo falhou ao subir (o `seed` rodou, o bind falhou): a primeira verificação do RF-BE-002 bateu no código velho (500 no login do operador). | Falha de ambiente | Detectado pelo `500` e pelo log (`address already in use`); resolvido matando o processo pelo PID. Lição: conferir qual processo atende a porta antes de verificar. |
+| `aoSalvar?.(await salvar.mutateAsync(...))`: com `aoSalvar` indefinido o JavaScript **não avalia o argumento**; a requisição de cadastro nunca saía e nenhum erro aparecia. | Erro da IA | Achado pelo teste ponta a ponta (sem requisição no *backend*) e corrigido (`await` em variável antes). Lição: **verificar o efeito no servidor**, não só a tela. |
+| Usei a classe `border-lg-0`, que **não existe** no Bootstrap (uma linha escura apareceu no desktop). | Erro da IA | Visto na captura de tela; trocado por `<hr class="d-lg-none">`. Lição: conferir utilitários na documentação da versão. |
+| O lint do React 19 (`react-hooks/refs`) rejeitou o `field` do `Controller` e o `ref` lido dentro do callback do `handleSubmit`. | Regra do projeto | Adaptado (`MaskedInput` recebe props soltas; guarda de envio no *handler* do evento). |
+| Dois servidores Vite (portas 5173 e 5174) e Chrome de execuções anteriores ficaram vivos; testes de timing falsos (React mantém a tela antiga durante o carregamento *lazy*). | Falha de ambiente/teste | Esperar a tela estabilizar antes de ler o texto; encerrar processos por PID/porta. |
+| `pkill -f` com o padrão presente na própria linha de comando derrubou o shell **de novo**. | Falha de ferramenta | Usar PID/porta (já anotado). |
 | Um comando `pkill -f` derrubou o próprio shell da sessão (padrão contido na linha de comando). | Falha de ferramenta | Sem impacto no repositório; passou a matar por PID/porta. |
 | Divergência de fluxo: o README manda *squash* e `main` protegida; o autor optou por merge commit e branches mantidas. | Decisão consciente | D-010, D-011. |
 
@@ -217,6 +234,8 @@ Cada decisão tem **autor**, **alternativas** e **ponto para repensar** (impacto
 6. **Decidir se os scripts de verificação** entram no repositório antes da fase de testes (D-058).
 7. **Revisar linha a linha** o código gerado (RNF-013): `refresh.py`, `login.py`, `shared/security.py`, `shared/errors.py`, `sessionManager.js`, `client.js`.
 8. **Rever D-063/D-030**: reler o perfil no banco ou aceitar a janela de 15 min.
-9. **Ordem de merge:** PR `chore/endurecimento-config-e-historico` antes do PR do RF-BE-002.
+9. **Ordem de merge atual:** PR do adendo `feat/rf-be-002-empresas-inativas` primeiro; depois o PR `feat/rf-fe-002-empresa` (empilhado).
 10. **Contrato do CNPJ:** decidir se empresa e cliente aceitam máscara (D-069) e se `versao` deve começar sempre em 0 (D-068).
+12. **Rodar axe/Lighthouse** na barra, no formulário e nas páginas de acesso negado/aguardando (RF-FE-002; não medido).
+13. **Sincronizar** as duas implementações de CNPJ (Python e JavaScript) se uma mudar (D-092).
 11. **Validar com o autor** os códigos novos (`COMPANY_NOT_FOUND`) antes de o RF-FE-002 depender deles (D-061).

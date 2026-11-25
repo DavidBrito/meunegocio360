@@ -1,33 +1,32 @@
-import Button from 'react-bootstrap/Button'
+import { useState } from 'react'
+import Alert from 'react-bootstrap/Alert'
 import Card from 'react-bootstrap/Card'
-import Container from 'react-bootstrap/Container'
+import { useLocation } from 'react-router'
 import { useAuth } from '../../features/auth'
+import { ROTULOS_PERFIL } from '../../shared/lib/perfis.js'
 
-/** Página inicial provisória (será substituída pelo dashboard). */
+/** Página inicial provisória (será substituída pelo dashboard). Dentro do AppLayout. */
 export default function HomePage() {
-  const { usuario, sair } = useAuth()
+  const { usuario } = useAuth()
+  const location = useLocation()
+  const [mensagem, setMensagem] = useState(location.state?.mensagem ?? null)
 
   return (
     <>
       <title>Início — MeuNegócio360</title>
-      <header className="text-bg-primary py-2">
-        <Container className="d-flex align-items-center justify-content-between">
-          <p className="h4 mb-0">MeuNegócio360</p>
-          <Button variant="outline-dark" onClick={sair}>
-            Sair
-          </Button>
-        </Container>
-      </header>
-      <Container as="main" className="py-4">
-        <Card>
-          <Card.Body>
-            <h1 className="h2">Olá, {usuario.nome}</h1>
-            <p className="mb-0">
-              Perfil: <strong>{usuario.perfil}</strong>
-            </p>
-          </Card.Body>
-        </Card>
-      </Container>
+      {mensagem && (
+        <Alert variant="success" dismissible onClose={() => setMensagem(null)}>
+          {mensagem}
+        </Alert>
+      )}
+      <Card>
+        <Card.Body>
+          <h1 className="h2">Olá, {usuario.nome}</h1>
+          <p className="mb-0">
+            Perfil: <strong>{ROTULOS_PERFIL[usuario.perfil]}</strong>
+          </p>
+        </Card.Body>
+      </Card>
     </>
   )
 }
