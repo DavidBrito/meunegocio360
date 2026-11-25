@@ -106,6 +106,21 @@ Corpo `{ "ativa": false, "versao": 3 }`. Inativa ou reativa a empresa (RN-02 e R
 | Perfil sem permissão | `403` | `ACCESS_DENIED` |
 | Operação de negócio sem empresa ativa (demais RFs) | `422` | `COMPANY_NOT_ACTIVE` |
 
+### Adendo do fork: `GET /empresa/inativas` (`ADMIN`)
+
+> **Decisão do autor deste fork (não consta no requisito original).** `GET /empresa` só devolve a empresa **ativa**; depois de inativá-la não há como obter seu `id` e `versao`, e o `PATCH /empresa/{id}/situacao` (reativação) ficaria inacessível ao frontend após recarregar a página ([RF-FE-002](../frontend/RF-FE-002.md)). Este endpoint fecha a lacuna sem mudar nenhum contrato existente (RNF-032: acréscimo compatível, sem nova versão de caminho).
+
+Lista paginada (RNF-BE-13) das empresas **inativas**, para o `ADMIN` escolher qual reativar. Parâmetros: `page` (a partir de 0), `size` (padrão 20, máx. 100) e `sort` (`atualizadoEm` ou `razaoSocial`, com `asc` ou `desc`; padrão `atualizadoEm,desc`, ou seja, a última inativada primeiro). Resposta `200`:
+
+```json
+{
+  "content": [ { "id": "…", "razaoSocial": "…", "cnpj": "11222333000181", "ativa": false, "versao": 2, "…": "…" } ],
+  "page": 0, "size": 20, "totalElements": 1, "totalPages": 1
+}
+```
+
+Cada item é o mesmo objeto de `GET /empresa` (traz `id` e `versao` para o `PATCH`). Erros: `403 ACCESS_DENIED` (qualquer perfil que não seja `ADMIN`), `400 VALIDATION_ERROR` (`page`, `size` ou `sort` inválidos, com o campo em `errors`) e `401`. Os demais perfis NÃO consultam inativas (RN-03).
+
 ## Modelo de dados
 
 Migrations novas, em sequência à `V2` (RNF-BE-20; os números abaixo são ilustrativos):

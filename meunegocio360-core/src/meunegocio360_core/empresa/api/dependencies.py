@@ -8,6 +8,7 @@ from meunegocio360_core.empresa.application.casos_de_uso import (
     AlterarSituacaoEmpresa,
     AtualizarEmpresa,
     CadastrarEmpresa,
+    ListarEmpresasInativas,
     ObterEmpresaAtiva,
 )
 from meunegocio360_core.empresa.application.empresa_ativa import EmpresaAtiva
@@ -30,6 +31,10 @@ def uow_factory() -> SqlAlchemyEmpresaUnitOfWork:
 
 def get_obter_empresa_ativa() -> ObterEmpresaAtiva:
     return ObterEmpresaAtiva(uow_factory)
+
+
+def get_listar_empresas_inativas() -> ListarEmpresasInativas:
+    return ListarEmpresasInativas(uow_factory)
 
 
 def get_cadastrar_empresa() -> CadastrarEmpresa:

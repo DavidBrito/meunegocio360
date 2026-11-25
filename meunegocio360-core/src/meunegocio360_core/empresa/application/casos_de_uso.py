@@ -29,6 +29,22 @@ class ObterEmpresaAtiva:
         return empresa
 
 
+class ListarEmpresasInativas:
+    """Empresas inativas (historico), para o ADMIN escolher qual reativar (adendo ao RF-BE-002)."""
+
+    def __init__(self, uow_factory: UowFactory) -> None:
+        self._uow_factory = uow_factory
+
+    def execute(
+        self, *, offset: int, limit: int, sort_field: str, descending: bool
+    ) -> tuple[list[Empresa], int]:
+        with self._uow_factory() as uow:
+            itens = uow.empresas.list_inactive(
+                offset=offset, limit=limit, sort_field=sort_field, descending=descending
+            )
+            return itens, uow.empresas.count_inactive()
+
+
 class CadastrarEmpresa:
     def __init__(self, uow_factory: UowFactory, clock: Clock) -> None:
         self._uow_factory = uow_factory

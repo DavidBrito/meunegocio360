@@ -29,6 +29,7 @@ class AppError(Exception):
         *,
         type_slug: str | None = None,
         headers: dict[str, str] | None = None,
+        errors: list[dict[str, str]] | None = None,
     ) -> None:
         super().__init__(detail)
         self.status = status
@@ -37,6 +38,7 @@ class AppError(Exception):
         self.detail = detail
         self.type_slug = type_slug or code.lower().replace("_", "-")
         self.headers = headers or {}
+        self.errors = errors
 
 
 def problem_response(
@@ -110,6 +112,7 @@ def register_error_handlers(app: FastAPI) -> None:
             detail=exc.detail,
             type_slug=exc.type_slug,
             headers=exc.headers,
+            errors=exc.errors,
         )
 
     @app.exception_handler(RequestValidationError)

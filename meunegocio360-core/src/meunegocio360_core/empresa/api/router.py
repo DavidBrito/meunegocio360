@@ -10,6 +10,7 @@ from meunegocio360_core.empresa.api.dependencies import (
     get_alterar_situacao_empresa,
     get_atualizar_empresa,
     get_cadastrar_empresa,
+    get_listar_empresas_inativas,
     get_obter_empresa_ativa,
 )
 from meunegocio360_core.empresa.api.schemas import (
@@ -22,6 +23,7 @@ from meunegocio360_core.empresa.application.casos_de_uso import (
     AlterarSituacaoEmpresa,
     AtualizarEmpresa,
     CadastrarEmpresa,
+    ListarEmpresasInativas,
     ObterEmpresaAtiva,
 )
 from meunegocio360_core.empresa.domain.errors import (
@@ -33,6 +35,7 @@ from meunegocio360_core.empresa.domain.errors import (
 )
 from meunegocio360_core.shared.errors import AppError
 from meunegocio360_core.shared.openapi import bearer_scheme, problem_responses
+from meunegocio360_core.shared.pagination import Page, PageParams, page_params
 from meunegocio360_core.shared.perfil import Perfil
 from meunegocio360_core.shared.security import require_perfis
 
@@ -76,6 +79,12 @@ _NEGOCIO = {
 }
 
 
+# Paginacao da listagem de inativas: campos de ordenacao permitidos (RNF-BE-16).
+_paginacao_inativas = page_params(
+    allowed_sort={"atualizadoEm", "razaoSocial"}, default_sort="atualizadoEm,desc"
+)
+
+
 @contextmanager
 def _erros_de_negocio() -> Iterator[None]:
     """Traduz erros de dominio para `problem+json` com `code` estavel (RNF-BE-15)."""
@@ -100,6 +109,34 @@ def _erros_de_negocio() -> Iterator[None]:
 def consultar(use_case: ObterEmpresaAtiva = Depends(get_obter_empresa_ativa)) -> EmpresaResponse:
     with _erros_de_negocio():
         return EmpresaResponse.de(use_case.execute())
+
+
+@router.get(
+    "/inativas",
+    response_model=Page[EmpresaResponse],
+    summary="Lista as empresas inativas (ADMIN)",
+    description=(
+        "Histórico de empresas inativadas, para escolher qual **reativar** "
+        "(`PATCH /empresa/{id}/situacao`). Paginada: `page`, `size` e `sort` "
+        "(`atualizadoEm` ou `razaoSocial`, `asc|desc`; padrão `atualizadoEm,desc`)."
+    ),
+    dependencies=somente_admin,
+    responses=problem_responses(
+        (400, "VALIDATION_ERROR", "Um ou mais parâmetros são inválidos."),
+        (403, "ACCESS_DENIED", "Seu perfil não tem permissão para esta operação."),
+    ),
+)
+def listar_inativas(
+    params: PageParams = Depends(_paginacao_inativas),
+    use_case: ListarEmpresasInativas = Depends(get_listar_empresas_inativas),
+) -> Page[EmpresaResponse]:
+    itens, total = use_case.execute(
+        offset=params.offset,
+        limit=params.size,
+        sort_field=params.sort_field,
+        descending=params.descending,
+    )
+    return Page.of([EmpresaResponse.de(item) for item in itens], params, total)
 
 
 @router.post(
